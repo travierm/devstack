@@ -1,0 +1,64 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "secret"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+    command: [ --max-allowed-packet=67108864 ]
+    networks:
+      - main_bus
+
+  postgres:
+    image: 'postgres:13'
+    ports:
+      - '5432:5432'
+    environment:
+      PGPASSWORD: 'secret'
+      POSTGRES_DATABASE: 'devstack_test'
+      POSTGRES_USER: 'app'
+      POSTGRES_PASSWORD: 'secret'
+    volumes:
+      - 'postgres:/var/lib/postgresql/data'
+    networks:
+      - main_bus
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "devstack_test",
+          "-U",
+          "app"
+        ]
+      retries: 3
+      timeout: 5s
+
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass secret
+    volumes:
+      - 'redis:/data'
+    networks:
+      - main_bus
+
+networks:
+  main_bus:
+    driver: bridge
+volumes:
+  redis:
+    driver: local
+  mysql:
+    driver: local
+  postgres:
+    driver: local
