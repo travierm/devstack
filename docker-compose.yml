@@ -28,25 +28,17 @@ services:
     networks:
       - main_bus
     healthcheck:
-      test:
-        [
-          "CMD",
-          "pg_isready",
-          "-q",
-          "-d",
-          "devstack_test",
-          "-U",
-          "app"
-        ]
-      retries: 3
+      test: [ "CMD-SHELL", "pg_isready -h localhost -p 5432" ]
+      interval: 10s
       timeout: 5s
+      retries: 5
 
   cache:
-    image: redis:6.2-alpine
+    image: redis:7.0-alpine
     restart: always
     ports:
       - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass secret
+    command: redis-server --save 20 1 --loglevel warning
     volumes:
       - 'redis:/data'
     networks:
